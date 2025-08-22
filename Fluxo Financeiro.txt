@@ -1,0 +1,119 @@
+# Sistema de Fluxo Financeiro #
+
+import datetime
+import os
+
+class Transacao:
+    def __init__(self, descricao, valor, tipo, data_vencimento):
+        self.descricao = descricao
+        self.valor = valor
+        self.tipo = tipo  # "pagar" ou "receber"
+        self.data_vencimento = data_vencimento
+        self.status = "pendente"
+        self.data_pagamento = None
+
+    def pagar(self):
+        if self.status == "pendente":
+            self.status = "pago"
+            self.data_pagamento = datetime.date.today()
+            print(f"✅ {self.tipo.title()} registrado como pago!")
+            self.gerar_comprovante()
+        else:
+            print("⚠️ Transação já foi paga!")
+
+    def gerar_comprovante(self):
+        if not os.path.exists("comprovantes"):
+            os.makedirs("comprovantes")
+        nome_arquivo = f"comprovantes/{self.descricao}_{self.data_pagamento}.txt"
+        with open(nome_arquivo, "w", encoding="utf-8") as f:
+            f.write("===== COMPROVANTE FINANCEIRO =====\n")
+            f.write(f"Descrição: {self.descricao}\n")
+            f.write(f"Valor: R$ {self.valor:.2f}\n")
+            f.write(f"Tipo: {self.tipo}\n")
+            f.write(f"Status: {self.status}\n")
+            f.write(f"Data de Pagamento: {self.data_pagamento}\n")
+            f.write("==================================\n")
+        print(f"📄 Comprovante gerado: {nome_arquivo}")
+
+
+class SistemaFinanceiro:
+    def __init__(self):
+        self.transacoes = []
+
+    def adicionar_transacao(self, descricao, valor, tipo, data_vencimento):
+        t = Transacao(descricao, valor, tipo, data_vencimento)
+        self.transacoes.append(t)
+        print("✅ Transação adicionada com sucesso!")
+
+    def listar_transacoes(self):
+        if not self.transacoes:
+            print("⚠️ Nenhuma transação registrada.")
+            return
+        for i, t in enumerate(self.transacoes, 1):
+            print(f"{i}. {t.descricao} - R$ {t.valor:.2f} - {t.tipo} - {t.status} - Venc.: {t.data_vencimento}")
+
+    def pagar_transacao(self, indice):
+        if 0 < indice <= len(self.transacoes):
+            self.transacoes[indice - 1].pagar()
+        else:
+            print("⚠️ Índice inválido!")
+
+    def gerar_relatorio(self):
+        if not os.path.exists("relatorios"):
+            os.makedirs("relatorios")
+        nome_arquivo = f"relatorios/relatorio_{datetime.date.today()}.txt"
+        total_pagar = sum(t.valor for t in self.transacoes if t.tipo == "pagar")
+        total_receber = sum(t.valor for t in self.transacoes if t.tipo == "receber")
+        total_pago = sum(t.valor for t in self.transacoes if t.status == "pago")
+
+        with open(nome_arquivo, "w", encoding="utf-8") as f:
+            f.write("===== RELATÓRIO FINANCEIRO =====\n")
+            f.write(f"Data: {datetime.date.today()}\n")
+            f.write(f"Total a Pagar: R$ {total_pagar:.2f}\n")
+            f.write(f"Total a Receber: R$ {total_receber:.2f}\n")
+            f.write(f"Total já Pago: R$ {total_pago:.2f}\n")
+            f.write("=================================\n")
+
+        print(f"📊 Relatório gerado: {nome_arquivo}")
+
+
+def menu():
+    sistema = SistemaFinanceiro()
+
+    while True:
+        print("\n===== SISTEMA FINANCEIRO =====")
+        print("1. Adicionar transação")
+        print("2. Listar transações")
+        print("3. Pagar transação")
+        print("4. Gerar relatório")
+        print("5. Sair")
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            descricao = input("Descrição: ")
+            valor = float(input("Valor: R$ "))
+            tipo = input("Tipo (pagar/receber): ").lower()
+            data_venc = input("Data de vencimento (AAAA-MM-DD): ")
+            sistema.adicionar_transacao(descricao, valor, tipo, data_venc)
+
+        elif opcao == "2":
+            sistema.listar_transacoes()
+
+        elif opcao == "3":
+            sistema.listar_transacoes()
+            indice = int(input("Digite o número da transação a pagar: "))
+            sistema.pagar_transacao(indice)
+
+        elif opcao == "4":
+            sistema.gerar_relatorio()
+
+        elif opcao == "5":
+            print("👋 Saindo do sistema...")
+            break
+
+        else:
+            print("⚠️ Opção inválida!")
+
+
+if __name__ == "__main__":
+    menu()
